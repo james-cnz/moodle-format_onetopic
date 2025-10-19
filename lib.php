@@ -430,6 +430,9 @@ class format_onetopic extends core_courseformat\base {
     public function get_view_url($section, $options = []) {
 
         $course = $this->get_course();
+        $realcoursedisplay = $course->realcoursedisplay ?? $course->coursedisplay ?? false;
+        $firstsection = ($realcoursedisplay == COURSE_DISPLAY_MULTIPAGE) ? 1 : 0;
+        $urlcondition = $options['urlcondition'] ?? 0;
         $url = new \core\url('/course/view.php', ['id' => $course->id]);
 
         $sr = null;
@@ -441,11 +444,17 @@ class format_onetopic extends core_courseformat\base {
         } else {
             $sectionno = $section;
         }
+        if (($urlcondition & URL_CONDITION_NAVIGATION) && ($sectionno === null)) {
+            return null;
+        }
         if ($sectionno !== null) {
             if ($sr !== null) {
                 if ($sr) {
                     $sectionno = $sr;
                 }
+            }
+            if (($urlcondition & URL_CONDITION_NAVIGATION) && ($sectionno < $firstsection)) {
+                return null;
             }
             $url->param('section', $sectionno);
         }
