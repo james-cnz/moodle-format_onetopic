@@ -405,6 +405,8 @@ class format_onetopic extends core_courseformat\base {
     public function get_view_url($section, $options = []) {
 
         $course = $this->get_course();
+        $coursedisplay = $course->coursedisplay ?? COURSE_DISPLAY_SINGLEPAGE;
+        $firstsection = ($coursedisplay == COURSE_DISPLAY_MULTIPAGE) ? 1 : 0;
         $url = new moodle_url('/course/view.php', ['id' => $course->id]);
 
         $sr = null;
@@ -423,6 +425,9 @@ class format_onetopic extends core_courseformat\base {
                 }
             }
             $url->param('section', $sectionno);
+            if (($options['urloptional'] ?? false) && ($sectionno < $firstsection)) {
+                return null;
+            }
         }
         return $url;
     }
