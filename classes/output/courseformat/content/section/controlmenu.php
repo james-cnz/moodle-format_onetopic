@@ -54,72 +54,67 @@ class controlmenu extends controlmenu_format_topics {
     public function section_control_items() {
         global $USER;
 
-        $format = $this->format;
-        $section = $this->section;
-        $course = $format->get_course();
+        $controls = parent::section_control_items();
 
-        $coursecontext = context_course::instance($course->id);
-        $numsections = $format->get_last_section_number();
-        $isstealth = $section->section > $numsections;
+        // Legacy move up and down links.
+        $course = $this->format->get_course();
+        $this->horizontal = !$course->hidetabsbar && (
+            $course->tabsview != \format_onetopic::TABSVIEW_VERTICAL &&
+            $course->tabsview != \format_onetopic::TABSVIEW_VERTICALALL
+        );
+        $this->rtl = right_to_left();
+        $controls = $this->add_control_after($controls, 'movesection', 'moveup', $this->get_section_moveup_item());
+        $controls = $this->add_control_after($controls, 'moveup', 'movedown', $this->get_section_movedown_item());
 
-        $baseurl = course_get_url($course);
-        $baseurl->param('sesskey', sesskey());
+        return $controls;
+    }
 
-        $parentcontrols = parent::section_control_items();
-
-        $movecontrols = [];
-        if ($section->section && !$isstealth && has_capability('moodle/course:movesections', $coursecontext, $USER)) {
-            $horizontal = !$course->hidetabsbar && (
-                $course->tabsview != \format_onetopic::TABSVIEW_VERTICAL &&
-                $course->tabsview != \format_onetopic::TABSVIEW_VERTICALALL
-            );
-            $rtl = right_to_left();
-
-            // Legacy move up and down links.
-            $url = clone($baseurl);
-            if ($section->section > 1) { // Add a arrow to move section up.
-                $url->param('section', $section->section);
-                $url->param('move', -1);
-                $strmoveup = $horizontal ? get_string('moveleft') : get_string('moveup');
-                $movecontrols['moveup'] = new link_secondary(
-                    url: $url,
-                    icon: new pix_icon($horizontal ? ($rtl ? 't/right' : 't/left') : 'i/up', ''),
-                    text: $strmoveup,
-                    attributes: ['class' => 'icon' . ($horizontal ? '' : ' moveup')],
-                );
-            }
-
-            $url = clone($baseurl);
-            if ($section->section < $numsections) { // Add a arrow to move section down.
-                $url->param('section', $section->section);
-                $url->param('move', 1);
-                $strmovedown = $horizontal ? get_string('moveright') : get_string('movedown');
-                $movecontrols['movedown'] = new link_secondary(
-                    url: $url,
-                    icon: new pix_icon($horizontal ? ($rtl ? 't/left' : 't/right') : 'i/down', ''),
-                    text: $strmovedown,
-                    attributes: ['class' => 'icon' . ($horizontal ? '' : ' movedown')],
-                );
-            }
-        }
-
-        // ToDo: reload the page is a temporal solution. We need control the delete tab action with JS.
-        if (array_key_exists("delete", $parentcontrols)) {
-            $url = new url('/course/editsection.php', [
-                'id' => $section->id,
-                'sr' => $section->section - 1,
-                'delete' => 1,
-                'sesskey' => sesskey(),
-            ]);
-
-            $parentcontrols['delete'] = new link_secondary(
+    /**
+     * Retrieves the move up for the section control menu.
+     *
+     * @return link|null The menu item if applicable, otherwise null.
+     */
+    protected function get_section_moveup_item(): ?link {
+        $url = clone($baseurl);
+        if ($this->section->section > 1) { // Add a arrow to move section up.
+            $url->param('section', $this->section->section);
+            $url->param('move', -1);
+            $strmoveup = $this->horizontal ? get_string('moveleft') : get_string('moveup');
+            $movecontrols['moveup'] = new link_secondary(
                 url: $url,
-                icon: new pix_icon('i/delete', ''),
-                text: get_string('delete'),
-                attributes: ['class' => 'editing_delete text-danger'],
+                icon: new pix_icon($this->horizontal ? ($this->rtl ? 't/right' : 't/left') : 'i/up', ''),
+                text: $strmoveup,
+                attributes: ['class' => 'icon' . ($this->horizontal ? '' : ' moveup')],
             );
         }
+    }
 
+    /**
+     * Retrieves the move down for the section control menu.
+     *
+     * @return link|null The menu item if applicable, otherwise null.
+     */
+    protected function get_section_movedown_item(): ?link {
+        $url = clone($baseurl);
+        if ($section->section < $this->numsections) { // Add a arrow to move section down.
+            $url->param('section', $this->section->section);
+            $url->param('move', 1);
+            $strmovedown = $this->horizontal ? get_string('moveright') : get_string('movedown');
+            $movecontrols['movedown'] = new link_secondary(
+                url: $url,
+                icon: new pix_icon($this->horizontal ? ($this->rtl ? 't/left' : 't/right') : 'i/down', ''),
+                text: $strmovedown,
+                attributes: ['class' => 'icon' . ($this->horizontal ? '' : ' movedown')],
+            );
+        }
+    }
+
+    /**
+     * Retrieves the permalink item for the section control menu.
+     *
+     * @return link|null The menu item if applicable, otherwise null.
+     */
+    protected function get_section_permalink_item(): ?link {
         // Create the permalink according to the Onetopic format.
         if (array_key_exists("permalink", $parentcontrols)) {
             $sectionlink = $format->get_view_url(
@@ -137,30 +132,29 @@ class controlmenu extends controlmenu_format_topics {
                 ],
             );
         }
+    }
 
-        // If the delete key exists, we are going to insert our controls before it.
-        $merged = [];
-        $movecontrolsbefore = null;
-        foreach (['delete', 'permalink'] as $controlname) {
-            if (array_key_exists($controlname, $parentcontrols)) {
-                $movecontrolsbefore = $controlname;
-                break;
-            }
+    /**
+     * Retrieves the delete item for the section control menu.
+     *
+     * @return link|null The menu item if applicable, otherwise null.
+     */
+    protected function get_section_delete_item(): ?link {
+        // ToDo: reload the page is a temporal solution. We need control the delete tab action with JS.
+        if (array_key_exists("delete", $parentcontrols)) {
+            $url = new url('/course/editsection.php', [
+                'id' => $section->id,
+                'sr' => $section->section - 1,
+                'delete' => 1,
+                'sesskey' => sesskey(),
+            ]);
+
+            $parentcontrols['delete'] = new link_secondary(
+                url: $url,
+                icon: new pix_icon('i/delete', ''),
+                text: get_string('delete'),
+                attributes: ['class' => 'editing_delete text-danger'],
+            );
         }
-
-        // We can't use splice because we are using associative arrays.
-        // Step through the array and merge the arrays.
-        foreach ($parentcontrols as $key => $action) {
-            if ($key == $movecontrolsbefore) {
-                $merged = array_merge($merged, $movecontrols);
-            }
-            $merged[$key] = $action;
-        }
-
-        if (!$movecontrolsbefore) {
-            $merged = array_merge($merged, $movecontrols);
-        }
-
-        return $merged;
     }
 }
