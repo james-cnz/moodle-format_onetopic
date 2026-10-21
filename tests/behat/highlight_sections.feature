@@ -14,6 +14,7 @@ Feature: Sections can be highlighted in Onetopic format
       | format        | onetopic |
       | coursedisplay | 0        |
       | numsections   | 5        |
+      | initsections  | 1        |
     And the following "activities" exist:
       | activity | name                 | intro                       | course | idnumber | section |
       | assign   | Test assignment name | Test assignment description | C1     | assign1  | 0       |
