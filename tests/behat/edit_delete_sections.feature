@@ -60,7 +60,7 @@ Feature: Sections can be edited and deleted in Onetopic format
     Given I am on "Course 1" course homepage with editing mode on
     When I click on "Topic 5" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I delete section "5"
-    Then I should see "Are you absolutely sure you want to completely delete \"Topic 5\" and all the activities it contains?"
+    Then I should see "This will delete Topic 5 and all the activities it contains."
     And I press "Delete"
     And I should not see "Topic 5"
     And I should see "Topic 4"
@@ -69,9 +69,8 @@ Feature: Sections can be edited and deleted in Onetopic format
     Given I am on "Course 1" course homepage with editing mode on
     When I click on "Topic 4" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I delete section "4"
-    Then I should see "Are you absolutely sure you want to completely delete \"Topic 4\" and all the activities it contains?"
     And I press "Delete"
-    And I should not see "Topic 5"
+    Then I should not see "Topic 5"
     And I should see "Topic 3" in the ".format_onetopic-tabs .tab_position_3 .nav-link.active" "css_element"
     And I click on "Topic 4" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I should not see "Test lesson name"
