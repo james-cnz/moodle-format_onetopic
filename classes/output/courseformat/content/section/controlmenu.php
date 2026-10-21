@@ -24,10 +24,9 @@
 
 namespace format_onetopic\output\courseformat\content\section;
 
-use context_course;
+use core\output\action_menu\link;
 use core\output\action_menu\link_secondary;
 use core\output\pix_icon;
-use core\url;
 use format_topics\output\courseformat\content\section\controlmenu as controlmenu_format_topics;
 
 /**
@@ -38,11 +37,8 @@ use format_topics\output\courseformat\content\section\controlmenu as controlmenu
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class controlmenu extends controlmenu_format_topics {
-    /** @var course_format the course format class */
-    protected $format;
-
-    /** @var section_info the course section class */
-    protected $section;
+    /** @var bool Is the tabs view horizontal? */
+    protected bool $horizontal;
 
     /**
      * Generate the edit control items of a section.
@@ -52,17 +48,14 @@ class controlmenu extends controlmenu_format_topics {
      * @return array of edit control items
      */
     public function section_control_items() {
-        global $USER;
-
+        $course = $this->format->get_course();
         $controls = parent::section_control_items();
 
         // Legacy move up and down links.
-        $course = $this->format->get_course();
         $this->horizontal = !$course->hidetabsbar && (
             $course->tabsview != \format_onetopic::TABSVIEW_VERTICAL &&
             $course->tabsview != \format_onetopic::TABSVIEW_VERTICALALL
         );
-        $this->rtl = right_to_left();
         $controls = $this->add_control_after($controls, 'movesection', 'moveup', $this->get_section_moveup_item());
         $controls = $this->add_control_after($controls, 'moveup', 'movedown', $this->get_section_movedown_item());
 
@@ -75,18 +68,28 @@ class controlmenu extends controlmenu_format_topics {
      * @return link|null The menu item if applicable, otherwise null.
      */
     protected function get_section_moveup_item(): ?link {
-        $url = clone($baseurl);
-        if ($this->section->section > 1) { // Add a arrow to move section up.
-            $url->param('section', $this->section->section);
-            $url->param('move', -1);
-            $strmoveup = $this->horizontal ? get_string('moveleft') : get_string('moveup');
-            $movecontrols['moveup'] = new link_secondary(
-                url: $url,
-                icon: new pix_icon($this->horizontal ? ($this->rtl ? 't/right' : 't/left') : 'i/up', ''),
-                text: $strmoveup,
-                attributes: ['class' => 'icon' . ($this->horizontal ? '' : ' moveup')],
-            );
+        if (
+            ($this->section->section <= 1)
+            || !has_capability('moodle/course:movesections', $this->coursecontext)
+        ) {
+            return null;
         }
+
+        $url = $this->format->get_update_url(
+            action: 'section_move_after',
+            ids: [$this->section->id],
+            targetsectionid: $this->format->get_section($this->section->section - 2)->id,
+            returnurl: $this->baseurl,
+        );
+
+        return new link_secondary(
+            url: $url,
+            icon: new pix_icon($this->horizontal ? (right_to_left() ? 't/right' : 't/left') : 'i/up', ''),
+            text: $this->horizontal ? get_string('moveleft') : get_string('moveup'),
+            attributes: [
+                'class' => 'moveup',
+            ],
+        );
     }
 
     /**
@@ -95,18 +98,31 @@ class controlmenu extends controlmenu_format_topics {
      * @return link|null The menu item if applicable, otherwise null.
      */
     protected function get_section_movedown_item(): ?link {
-        $url = clone($baseurl);
-        if ($section->section < $this->numsections) { // Add a arrow to move section down.
-            $url->param('section', $this->section->section);
-            $url->param('move', 1);
-            $strmovedown = $this->horizontal ? get_string('moveright') : get_string('movedown');
-            $movecontrols['movedown'] = new link_secondary(
-                url: $url,
-                icon: new pix_icon($this->horizontal ? ($this->rtl ? 't/left' : 't/right') : 'i/down', ''),
-                text: $strmovedown,
-                attributes: ['class' => 'icon' . ($this->horizontal ? '' : ' movedown')],
-            );
+        $numsections = $this->format->get_last_section_number();
+
+        if (
+            ($this->section->section == 0)
+            || ($this->section->section >= $numsections)
+            || !has_capability('moodle/course:movesections', $this->coursecontext)
+        ) {
+            return null;
         }
+
+        $url = $this->format->get_update_url(
+            action: 'section_move_after',
+            ids: [$this->section->id],
+            targetsectionid: $this->format->get_section($this->section->section + 1)->id,
+            returnurl: $this->baseurl,
+        );
+
+        return new link_secondary(
+            url: $url,
+            icon: new pix_icon($this->horizontal ? (right_to_left() ? 't/left' : 't/right') : 'i/down', ''),
+            text: $this->horizontal ? get_string('moveright') : get_string('movedown'),
+            attributes: [
+                'class' => 'movedown',
+            ],
+        );
     }
 
     /**
@@ -115,23 +131,18 @@ class controlmenu extends controlmenu_format_topics {
      * @return link|null The menu item if applicable, otherwise null.
      */
     protected function get_section_permalink_item(): ?link {
-        // Create the permalink according to the Onetopic format.
-        if (array_key_exists("permalink", $parentcontrols)) {
-            $sectionlink = $format->get_view_url(
-                $section,
+        $link = parent::get_section_permalink_item();
+
+        // Modify the permalink according to the Onetopic format.
+        if ($link) {
+            $url = $this->format->get_view_url(
+                $this->section,
                 ['permalink' => true, 'anchortotabstree' => true]
             );
-
-            $parentcontrols['permalink'] = new link_secondary(
-                url: $sectionlink,
-                icon: new pix_icon('i/link', ''),
-                text: get_string('sectionlink', 'course'),
-                attributes: [
-                    'class' => 'icon',
-                    'data-action' => 'permalink',
-                ],
-            );
+            $link->url = $url;
         }
+
+        return $link;
     }
 
     /**
@@ -140,21 +151,19 @@ class controlmenu extends controlmenu_format_topics {
      * @return link|null The menu item if applicable, otherwise null.
      */
     protected function get_section_delete_item(): ?link {
-        // ToDo: reload the page is a temporal solution. We need control the delete tab action with JS.
-        if (array_key_exists("delete", $parentcontrols)) {
-            $url = new url('/course/editsection.php', [
-                'id' => $section->id,
-                'sr' => $section->section - 1,
-                'delete' => 1,
-                'sesskey' => sesskey(),
-            ]);
+        $link = parent::get_section_delete_item();
 
-            $parentcontrols['delete'] = new link_secondary(
-                url: $url,
-                icon: new pix_icon('i/delete', ''),
-                text: get_string('delete'),
-                attributes: ['class' => 'editing_delete text-danger'],
+        // ToDo: reload the page is a temporal solution. We need control the delete tab action with JS.
+        if ($link) {
+            $url = $this->format->get_update_url(
+                action: 'section_delete',
+                ids: [$this->section->id],
+                returnurl: $this->format->get_view_url($this->format->get_section($this->section->section - 1)),
             );
+            $link->url = $url;
+            unset($link->attributes['data-action']);
         }
+
+        return $link;
     }
 }
