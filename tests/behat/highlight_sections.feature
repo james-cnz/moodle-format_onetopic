@@ -29,39 +29,39 @@ Feature: Sections can be highlighted in Onetopic format
 
   @javascript
   Scenario: Highlight a section in Onetopic format
-    When I click on "Topic 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
+    When I click on "Section 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I open section "2" edit menu
-    And I click on "Highlight" "link" in the "Topic 2" "section"
-    Then I should see "Highlighted" in the "Topic 2" "section"
+    And I click on "Highlight" "link" in the "Section 2" "section"
+    Then I should see "Highlighted" in the "Section 2" "section"
 
   @javascript
   Scenario: Highlight a section when another section is already highlighted in Onetopic format
-    Given I click on "Topic 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
+    Given I click on "Section 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I open section "3" edit menu
-    And I click on "Highlight" "link" in the "Topic 3" "section"
-    And I should see "Highlighted" in the "Topic 3" "section"
-    When I click on "Topic 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
+    And I click on "Highlight" "link" in the "Section 3" "section"
+    And I should see "Highlighted" in the "Section 3" "section"
+    When I click on "Section 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I open section "2" edit menu
-    And I click on "Highlight" "link" in the "Topic 2" "section"
-    Then I should see "Highlighted" in the "Topic 2" "section"
-    And I click on "Topic 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
-    And I should not see "Highlighted" in the "Topic 3" "section"
+    And I click on "Highlight" "link" in the "Section 2" "section"
+    Then I should see "Highlighted" in the "Section 2" "section"
+    And I click on "Section 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
+    And I should not see "Highlighted" in the "Section 3" "section"
 
   @javascript
   Scenario: Unhighlight a section in Onetopic format
-    Given I click on "Topic 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
+    Given I click on "Section 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I open section "3" edit menu
-    And I click on "Highlight" "link" in the "Topic 3" "section"
-    And I should see "Highlighted" in the "Topic 3" "section"
+    And I click on "Highlight" "link" in the "Section 3" "section"
+    And I should see "Highlighted" in the "Section 3" "section"
     When I open section "3" edit menu
-    And I click on "Unhighlight" "link" in the "Topic 3" "section"
-    Then I should not see "Highlighted" in the "Topic 3" "section"
+    And I click on "Unhighlight" "link" in the "Section 3" "section"
+    Then I should not see "Highlighted" in the "Section 3" "section"
 
   Scenario: Highlight and unhighlight a section can be done without ajax in Onetopic format
     # Without javascript hidden elements cannot be detected with a simple I should see step.
-    Given I click on "Topic 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
+    Given I click on "Section 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And ".section.current" "css_element" should not exist
-    When I click on "Highlight" "link" in the "Topic 2" "core_courseformat > Section actions menu"
+    When I click on "Highlight" "link" in the "Section 2" "core_courseformat > Section actions menu"
     Then ".section.current[data-number='2']" "css_element" should exist
-    And  I click on "Unhighlight" "link" in the "Topic 2" "core_courseformat > Section actions menu"
+    And  I click on "Unhighlight" "link" in the "Section 2" "core_courseformat > Section actions menu"
     And ".section.current" "css_element" should not exist
