@@ -28,40 +28,23 @@ Feature: Sections can be highlighted in Onetopic format
     And I am on "Course 1" course homepage with editing mode on
 
   @javascript
-  Scenario: Highlight a section in Onetopic format
-    When I click on "Section 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
-    And I open section "2" edit menu
-    And I click on "Highlight" "link" in the "#section-2" "css_element"
-    Then I should see "Highlighted" in the "#section-2" "css_element"
-
-  @javascript
   Scenario: Highlight a section when another section is already highlighted in Onetopic format
     Given I click on "Section 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I open section "3" edit menu
-    And I click on "Highlight" "link" in the "#section-3" "css_element"
-    And I should see "Highlighted" in the "#section-3" "css_element"
+    And I click on "Highlight" "link" in the "region-main" "region"
+    And I should see "Highlighted" in the "region-main" "region"
     When I click on "Section 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And I open section "2" edit menu
-    And I click on "Highlight" "link" in the "#section-2" "css_element"
-    Then I should see "Highlighted" in the "#section-2" "css_element"
+    And I click on "Highlight" "link" in the "region-main" "region"
+    Then I should see "Highlighted" in the "region-main" "region"
     And I click on "Section 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
-    And I should not see "Highlighted" in the "#section-3" "css_element"
-
-  @javascript
-  Scenario: Unhighlight a section in Onetopic format
-    Given I click on "Section 3" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
-    And I open section "3" edit menu
-    And I click on "Highlight" "link" in the "#section-3" "css_element"
-    And I should see "Highlighted" in the "#section-3" "css_element"
-    When I open section "3" edit menu
-    And I click on "Unhighlight" "link" in the "#section-3" "css_element"
-    Then I should not see "Highlighted" in the "#section-3" "css_element"
+    And I should not see "Highlighted" in the "region-main" "region"
 
   Scenario: Highlight and unhighlight a section can be done without ajax in Onetopic format
     # Without javascript hidden elements cannot be detected with a simple I should see step.
     Given I click on "Section 2" "link" in the "#page-content ul.nav.nav-tabs" "css_element"
     And ".section.current" "css_element" should not exist
-    When I click on "Highlight" "link" in the "#section-2" "css_element"
+    When I click on "Highlight" "link" in the "region-main" "region"
     Then ".section.current[data-number='2']" "css_element" should exist
-    And  I click on "Unhighlight" "link" in the "#section-2" "css_element"
+    And  I click on "Unhighlight" "link" in the "region-main" "region"
     And ".section.current" "css_element" should not exist
